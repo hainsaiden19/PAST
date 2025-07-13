@@ -1,13 +1,12 @@
-function mu_M = Magnetorquer(current, n, A)
+%%% Monitors the current being supplied to the magnetorquers and
+%%% limits it to a specified maximum
 
+function current = Magnetorquer(angvel, magfieldbody)
+    
+    k = 1e5;
 
-moment = n*A*current; % L M N
-% caps moment at 2 A m^2
-% for i = 1:length(moment)
-%     mom = moment(i);
-%     if mom > 2
-%         moment(i) = 2;
-%     end
-% end     
+    moment = k*(cross(angvel, magfieldbody));
+    
+    MagnetorquerParams
 
-mu_M = moment;
+current = moment/(n*A);

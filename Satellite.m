@@ -60,7 +60,9 @@ H = Inertia*angvel;
 x = state(1);
 y = state(2);
 z = state(3);
-magfieldinertial = MagneticField(x, y, z)';
+
+% Magnetic field section %
+magfieldinertial = MagSensorModule(x, y, z);
 magfieldbody = TBIquat(quart)*magfieldinertial;
 
 MagnetorquerParams

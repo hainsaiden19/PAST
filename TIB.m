@@ -1,3 +1,4 @@
+% from body to inertial frame
 function rotationmatrix = TIB(phi, theta, psi)
 
 cph = cos(phi);

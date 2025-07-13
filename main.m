@@ -1,15 +1,17 @@
-
+%%% Terminal Initialisation %%%
 clear
 clc
 close all
 
 disp('Simulation Started')
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%% Init Planet attributes %%%%
 Planet
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-%%% Initial conditions for Position & Velocity  %%%%%%%%
+%%% Initial conditions for Position & Velocity %%%%%%%%%
 alt = 600e3; % 600km alt [metres]
 inc = deg2rad(56);
 sma = alt + earthRadius;
@@ -35,60 +37,83 @@ euler0 = [phi0 theta0 psi0];
 
 quart0 = eul2quat(euler0)';
 
-p0 = -30*((2*pi)/360);
+p0 = -10*((2*pi)/360);
 q0 = 20*((2*pi)/360);
-r0 = -10*((2*pi)/360);
+r0 = -5*((2*pi)/360);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-%%% Propogate Cubesat %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% format: position xyz (1:3), velocity in xyz directions (4:6), 
-%         quarternion orientation (7:10), angular velocity (11:13)
+%%% Initial Conditions for magnetorquer %%%%%%%
+current = [0; 0; 0];
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-%%% Time Window %%%
+%%% Time Window %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 orbit_period = 2*pi*sqrt((sma^3)/(earth_mu));
-num_orbits = 0.5;
+num_orbits = 0.05;
 tfinal = orbit_period*num_orbits;
-tstep = 0.01; % seconds
-tout = 0:1:tfinal;
+tstep = 0.1; % seconds
+tout = 0:tstep:tfinal;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% for plotting
+
+%%% Plotting %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Bxout = 0*tout;
 Byout = 0*tout;
 Bzout = 0*tout;
 
+currentout = zeros(length(tout), length(current));
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%% Main State Initialisation %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% format: Column vector
+%         position xyz (1:3);
+%         velocity in xyz directions (4:6);
+%         quarternion orientation (7:10);
+%         angular velocity (11:13);
+%         current (14:16)
 state = [x0; y0; z0; xdot0; ydot0; zdot0; quart0; p0; q0; r0];
 stateout = zeros(length(tout), length(state));
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%% RK4 numerical integration %%%
+
+%%% Numerical Integration %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for idx = 1:length(tout)
-    % keep track of sim
-    message = sprintf("%d / %d", tout(idx), max(tout));
+    %%% Keep track of sim %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    message = sprintf("%.1f / %.1f \n", tout(idx), max(tout));
+    fprintf(message)
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    disp(message)
-
-
+    %%% Get Magnetic field components %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     magfieldcurrent = MagneticField(state(1), state(2), state(3));
+    magfieldbodycurrent = TBIquat(state(7:10))*(magfieldcurrent');
     Bxout(idx) = magfieldcurrent(1);
     Byout(idx) = magfieldcurrent(2);
     Bzout(idx) = magfieldcurrent(3);
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    % save the state to a library of all states
+    %%% Get Current %%%
+    current = Magnetorquer(state(11:13), magfieldbodycurrent);
+    currentout(idx, :) = current';
+    %%%%%%%%%%%%%%%%%%%
+
+    %%% Save the state to a library of all states
     stateout(idx, :) = state';
    
-    % integrate for next state
+    %%% RK4 Integration %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     k_1 = Satellite(tout(idx), state);
     k_2 = Satellite(tout(idx)+tstep/2, state+(k_1*tstep/2));
     k_3 = Satellite(tout(idx)+tstep/2, state+(k_2*tstep/2));
     k_4 = Satellite(tout(idx)+tstep, state+(k_3*tstep));
 
     k = (1/6)*(k_1 + 2*k_2 + 2*k_3 + k_4);
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    % change current state to new integrated one   
+    %%% Change current state to new integrated one   
     state = state + k*tstep;
 end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%% Extract Vector Components %%%
 xout = stateout(:, 1);
@@ -114,13 +139,14 @@ thetaout = eulerangles(:, 2);
 psiout = eulerangles(:, 3);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
+%%% Final positions displayed in terminal %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 pout = pout*(180/(pi));
 qout = qout*(180/(pi));
 rout = rout*(180/(pi));
 
 mess = sprintf("p: %.5f, q: %.5f, r: %.5f", pout(end), qout(end), rout(end));
 disp(mess)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 disp('Simulation Complete')
@@ -161,21 +187,40 @@ xlabel('Time (Hours)')
 title('Magnetic Field Components During Orbit')
 legend('X', 'Y', 'Z')
 xlim([0 max(touthours)])
-
-% fig3 = figure();
-% set(fig3, color='white')
-% touthours = tout/3600;
-% plot(touthours, Bxderivout, 'r-')
-% grid on
-% hold on
-% plot(touthours, Byderivout, 'g-')
-% plot(touthours, Bzderivout, 'b-')
-% ylabel('Derivative of Magnetic Field') 
-% xlabel('Time (Hours)')
-% title('Derivative of Magnetic Field Components During Orbit')
-% legend('Bx', 'By', 'Bz')
-% xlim([0 max(touthours)])
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%% Plot Attitude Over Time %%%%%%%%%
+fig5 = figure();
+set(fig5, color='white')
+plot(touthours, phiout, 'r-')
+hold on
+grid on
+plot(touthours, thetaout, 'g-')
+plot(touthours, psiout, 'b-')
+xlabel('time (hours)')
+ylabel('Attitude (rads)')
+title('Attitude Over Time')
+legend('phi', 'theta', 'psi')
+xlim([0 max(touthours)])
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%% Plot Current Over Time %%%%%%%%%
+fig6 = figure();
+set(fig6, color='white')
+plot(touthours, currentout(:, 1), 'r-')
+hold on
+grid on
+plot(touthours, currentout(:, 2), 'g-')
+plot(touthours, currentout(:, 3), 'b-')
+xlabel('time (hours)')
+ylabel('Current (mA)')
+title('Current Over Time')
+legend('Ix', 'Iy', 'Iz')
+xlim([0 max(touthours)])
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 %%% Plot angular velocity over time %%%%%%
 fig4 = figure();
@@ -192,17 +237,3 @@ legend('p', 'q', 'r')
 xlim([0 max(touthours)])
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%% Plot Attitude Over Time %%%%%%%%%
-fig5 = figure();
-set(fig5, color='white')
-plot(touthours, phiout, 'r-')
-hold on
-grid on
-plot(touthours, thetaout, 'g-')
-plot(touthours, psiout, 'b-')
-xlabel('time (hours)')
-ylabel('Attitude (rads)')
-title('Attitude Over Time')
-legend('phi', 'theta', 'psi')
-xlim([0 max(touthours)])
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
