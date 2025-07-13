@@ -1,4 +1,4 @@
-% from body to inertial frame
+% Rotation matrix from body frame to inertial frame using queler angles
 function rotationmatrix = TIB(phi, theta, psi)
 
 cph = cos(phi);

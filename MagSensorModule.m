@@ -14,6 +14,9 @@ function reading = MagSensorModule(x, y, z)
 
     %message = sprintf("%d, %d, %d", magfield_x_ideal, magfield_y_ideal, magfield_z_ideal);
 
+    %%% this section takes a new value when the limiter has elapsed
+    %%% but holds onto that value and keeps using it until a new one
+    %%% is requested
     persistent limiter magfieldinertial
 
     if isempty(magfieldinertial)
@@ -28,10 +31,14 @@ function reading = MagSensorModule(x, y, z)
         limiter = limiter + 1;
     end
 
+    %%% mimicking the dicrete function call by limiting how often the
+    %%% sensor can get a new reading
     frequency = 10*(4);
     if mod(limiter, frequency) == 0
         magfieldinertial = MagneticField(x, y, z);
         
+        %%% adds in random error, it could be plus or minus
+        %%% the error added below at random
         n = 20;
         % 10 percent error where n = 1
         % total error = n*10

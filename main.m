@@ -16,13 +16,20 @@ alt = 600e3; % 600km alt [metres]
 inc = deg2rad(56);
 sma = alt + earthRadius;
 
+%%% start cubesat on the x-axis
 x0 = alt + earthRadius;
 y0 = 0;
 z0 = 0;
 
+%%% define the initial velocity of the cubesat
+%%% assume orbit is circular, so it is moving 
+%%% around with a given speed at the given distance
+%%% to earth
 r = norm([x0; y0; z0]);
 circ_vel = sqrt(earth_mu/r);
 
+%%% not moving in the x direction, but is moving
+%%% in the y and z
 xdot0 = 0; 
 ydot0 = circ_vel*cos(inc); 
 zdot0 = circ_vel*sin(inc);
@@ -30,6 +37,8 @@ zdot0 = circ_vel*sin(inc);
 
 
 %%% Initial conditions for Attitude and Angular Velocity  %%%%%%%%
+%%% define the initial rotation in euler angles
+%%% then convert to quaternions
 phi0 = 0;
 theta0 = 0;
 psi0 = 0;
@@ -37,6 +46,7 @@ euler0 = [phi0 theta0 psi0];
 
 quart0 = eul2quat(euler0)';
 
+%%% initial angular velocity params in rads/s
 p0 = -10*((2*pi)/360);
 q0 = 20*((2*pi)/360);
 r0 = -5*((2*pi)/360);
@@ -93,10 +103,10 @@ for idx = 1:length(tout)
     Bzout(idx) = magfieldcurrent(3);
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    %%% Get Current %%%
+    %%% Get Current %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     current = Magnetorquer(state(11:13), magfieldbodycurrent);
     currentout(idx, :) = current';
-    %%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     %%% Save the state to a library of all states
     stateout(idx, :) = state';

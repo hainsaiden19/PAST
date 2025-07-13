@@ -1,10 +1,10 @@
-% rotation matrix from inertial frame to body frame using quartenions
-function rotationmatrix = TBIquat(quarternion)
+% rotation matrix from inertial frame to body frame using quatenions
+function rotationmatrix = TBIquat(quaternion)
 
-q0 = quarternion(1);
-q1 = quarternion(2);
-q2 = quarternion(3);
-q3 = quarternion(4);
+q0 = quaternion(1);
+q1 = quaternion(2);
+q2 = quaternion(3);
+q3 = quaternion(4);
 
 q0s = q0^2;
 q1s = q1^2;
