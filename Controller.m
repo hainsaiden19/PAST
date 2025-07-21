@@ -8,16 +8,12 @@
 
 function torque = Controller(magfieldbody, angvel)
 
-    % for step size = 1 second
-    %k=4e4;
 
-    % for tstep = 0.1 seconds
-    k = 1e5;
-    
-    % for step size = 0.01 seconds
-    % k=3e6;
+    % optimal k value found using k = 2n(1+sin(i))*Imin
+    GainValue
 
-    moment = k*cross(angvel, magfieldbody);
+    moment = k*cross(angvel, magfieldbody)/(norm(magfieldbody)^2);
+
 
 torque = cross(moment, magfieldbody);
 

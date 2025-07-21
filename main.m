@@ -12,8 +12,8 @@ Planet
 
 
 %%% Initial conditions for Position & Velocity %%%%%%%%%
-alt = 600e3; % 600km alt [metres]
-inc = deg2rad(56);
+alt = 400e3; % 600km alt [metres]
+inc = deg2rad(51.6);
 sma = alt + earthRadius;
 
 %%% start cubesat on the x-axis
@@ -54,13 +54,13 @@ r0 = -5*((2*pi)/360);
 
 
 %%% Initial Conditions for magnetorquer %%%%%%%
-current = [0; 0; 0];
+moment = [0; 0; 0];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 %%% Time Window %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 orbit_period = 2*pi*sqrt((sma^3)/(earth_mu));
-num_orbits = 0.05;
+num_orbits = 0.1;
 tfinal = orbit_period*num_orbits;
 tstep = 0.1; % seconds
 tout = 0:tstep:tfinal;
@@ -72,7 +72,7 @@ Bxout = 0*tout;
 Byout = 0*tout;
 Bzout = 0*tout;
 
-currentout = zeros(length(tout), length(current));
+momentout = zeros(length(tout), length(moment));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -84,9 +84,14 @@ currentout = zeros(length(tout), length(current));
 %         angular velocity (11:13);
 %         current (14:16)
 state = [x0; y0; z0; xdot0; ydot0; zdot0; quart0; p0; q0; r0];
+stateinitial = [x0; y0; z0; xdot0; ydot0; zdot0; quart0; p0; q0; r0];
 stateout = zeros(length(tout), length(state));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%% ODE45 Integration %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%[tout, stateout] = ode45(@Satellite, tfinal, stateinitial);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%% Numerical Integration %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for idx = 1:length(tout)
@@ -103,9 +108,9 @@ for idx = 1:length(tout)
     Bzout(idx) = magfieldcurrent(3);
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    %%% Get Current %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    current = Magnetorquer(state(11:13), magfieldbodycurrent);
-    currentout(idx, :) = current';
+    %%% Get Moment %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    moment = Magnetorquer(state(11:13), magfieldbodycurrent);
+    momentout(idx, :) = moment';
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     %%% Save the state to a library of all states
@@ -161,73 +166,75 @@ disp(mess)
 
 disp('Simulation Complete')
 
-
-%%% Plotting Orbit %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-xaxes = 0:100:2*R;
-yaxes = 0:100:2*R;
-zaxes = 0:100:2*R;
 touthours = tout/3600;
 
-fig1 = figure();
-set(fig1, 'color', 'white');
-plot3(xout, yout, zout, 'b-', 'LineWidth', 4);
-grid on
-hold on
-surf(Xe, Ye, Ze, 'EdgeColor','none');
-title('Cubesat Orbit 3D')
-xlabel('X')
-ylabel('Y')
-zlabel('Z')
-plot3(xaxes, 0*xaxes, 0*xaxes, 'r-', LineWidth=2)
-plot3(0*yaxes, yaxes, 0*yaxes, 'g-', LineWidth=2)
-plot3(0*zaxes, 0*zaxes, zaxes, 'b-', LineWidth=2)
+
+%%% Plotting Orbit %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% xaxes = 0:100:2*R;
+% yaxes = 0:100:2*R;
+% zaxes = 0:100:2*R;
+% touthours = tout/3600;
+% 
+% fig1 = figure();
+% set(fig1, 'color', 'white');
+% plot3(xout, yout, zout, 'b-', 'LineWidth', 4);
+% grid on
+% hold on
+% surf(Xe, Ye, Ze, 'EdgeColor','none');
+% title('Cubesat Orbit 3D')
+% xlabel('X')
+% ylabel('Y')
+% zlabel('Z')
+% plot3(xaxes, 0*xaxes, 0*xaxes, 'r-', LineWidth=2)
+% plot3(0*yaxes, yaxes, 0*yaxes, 'g-', LineWidth=2)
+% plot3(0*zaxes, 0*zaxes, zaxes, 'b-', LineWidth=2)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 %%%% Plotting Magnetic Field over time %%%%%%%%%%%
-fig2 = figure();
-set(fig2, color='white')
-plot(touthours, Bxout, 'r-')
-grid on
-hold on
-plot(touthours, Byout, 'g-')
-plot(touthours, Bzout, 'b-')
-ylabel('Magnetic Field (T)') 
-xlabel('Time (Hours)')
-title('Magnetic Field Components During Orbit')
-legend('X', 'Y', 'Z')
-xlim([0 max(touthours)])
+% fig2 = figure();
+% set(fig2, color='white')
+% plot(touthours, Bxout, 'r-')
+% grid on
+% hold on
+% plot(touthours, Byout, 'g-')
+% plot(touthours, Bzout, 'b-')
+% ylabel('Magnetic Field (T)') 
+% xlabel('Time (Hours)')
+% title('Magnetic Field Components During Orbit')
+% legend('X', 'Y', 'Z')
+% xlim([0 max(touthours)])
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 %%% Plot Attitude Over Time %%%%%%%%%
-fig5 = figure();
-set(fig5, color='white')
-plot(touthours, phiout, 'r-')
-hold on
-grid on
-plot(touthours, thetaout, 'g-')
-plot(touthours, psiout, 'b-')
-xlabel('time (hours)')
-ylabel('Attitude (rads)')
-title('Attitude Over Time')
-legend('phi', 'theta', 'psi')
-xlim([0 max(touthours)])
+% fig5 = figure();
+% set(fig5, color='white')
+% plot(touthours, phiout, 'r-')
+% hold on
+% grid on
+% plot(touthours, thetaout, 'g-')
+% plot(touthours, psiout, 'b-')
+% xlabel('time (hours)')
+% ylabel('Attitude (rads)')
+% title('Attitude Over Time')
+% legend('phi', 'theta', 'psi')
+% xlim([0 max(touthours)])
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-%%% Plot Current Over Time %%%%%%%%%
+%%% Plot Moment Over Time %%%%%%%%%%%
 fig6 = figure();
 set(fig6, color='white')
-plot(touthours, currentout(:, 1), 'r-')
+plot(touthours, momentout(:, 1), 'r-')
 hold on
 grid on
-plot(touthours, currentout(:, 2), 'g-')
-plot(touthours, currentout(:, 3), 'b-')
+plot(touthours, momentout(:, 2), 'g-')
+plot(touthours, momentout(:, 3), 'b-')
 xlabel('time (hours)')
-ylabel('Current (mA)')
-title('Current Over Time')
-legend('Ix', 'Iy', 'Iz')
+ylabel('moment (Am^2)')
+title('Moment Over Time')
+legend('Mx', 'My', 'Mz')
 xlim([0 max(touthours)])
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

@@ -1,12 +1,11 @@
 %%% Monitors the current being supplied to the magnetorquers and
 %%% limits it to a specified maximum
 
-function current = Magnetorquer(angvel, magfieldbody)
+function moment = Magnetorquer(angvel, magfieldbody)
     
-    k = 1e5;
+    % get k value
+    GainValue
 
-    moment = k*(cross(angvel, magfieldbody));
+    moment = k*cross(angvel, magfieldbody)/(norm(magfieldbody)^2);
     
-    MagnetorquerParams
 
-current = moment/(n*A);
