@@ -2,7 +2,7 @@
 %%% detumble a cubesat using the equation:
 
 %%% torque = moment x magnetic_field(body frame)
-%%% where: moment = -k*(ang_velocity x magnetic_field(body frame))
+%%% where: moment = k*(ang_velocity x magnetic_field(body frame))
 %%% therefore:
 %%% torque = (k*(ang_velocity x magnetic_field(body frame))) x magnetic_field(body frame)
 

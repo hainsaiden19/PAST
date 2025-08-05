@@ -60,9 +60,9 @@ moment = [0; 0; 0];
 
 %%% Time Window %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 orbit_period = 2*pi*sqrt((sma^3)/(earth_mu));
-num_orbits = 0.1;
+num_orbits = 1;
 tfinal = orbit_period*num_orbits;
-tstep = 0.1; % seconds
+tstep = 0.01; % seconds
 tout = 0:tstep:tfinal;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -77,12 +77,10 @@ momentout = zeros(length(tout), length(moment));
 
 
 %%% Main State Initialisation %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% format: Column vector
-%         position xyz (1:3);
-%         velocity in xyz directions (4:6);
-%         quarternion orientation (7:10);
-%         angular velocity (11:13);
-%         current (14:16)
+% format: Column vector : position xyz (1:3);
+%                         velocity in xyz directions (4:6);
+%                         quarternion orientation (7:10);
+%                         angular velocity (11:13);
 state = [x0; y0; z0; xdot0; ydot0; zdot0; quart0; p0; q0; r0];
 stateinitial = [x0; y0; z0; xdot0; ydot0; zdot0; quart0; p0; q0; r0];
 stateout = zeros(length(tout), length(state));
@@ -90,7 +88,6 @@ stateout = zeros(length(tout), length(state));
 
 %%% ODE45 Integration %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %[tout, stateout] = ode45(@Satellite, tfinal, stateinitial);
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%% Numerical Integration %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
